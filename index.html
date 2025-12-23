@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>🎄 Lời chúc Noel cho em</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+html, body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background: black;
+    font-family: 'Segoe UI', sans-serif;
+}
+canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+}
+.text-box {
+    position: absolute;
+    top: 55%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    text-align: center;
+    max-width: 90vw;
+    font-size: 1.4em;
+    line-height: 1.6;
+    text-shadow: 0 0 5px #ffb6c1;
+    z-index: 10;
+}
+h1 {
+    font-size: 2.5em;
+    margin-bottom: 10px;
+    color: #ff6b81;
+    text-shadow:
+        0 0 10px #ff6b81,
+        0 0 20px #ff9aa2,
+        0 0 30px #ffc1cc;
+    animation: glow 2s infinite alternate;
+}
+@keyframes glow {
+    from { text-shadow: 0 0 5px #ff6b81; }
+    to { text-shadow: 0 0 20px #ffe0e9; }
+}
+</style>
+</head>
+
+<body>
+
+<canvas id="c"></canvas>
+
+<div class="text-box">
+    <h1>🎄 Merry Christmas 🎁</h1>
+    <div id="message"></div>
+</div>
+
+<!-- 🎵 Nhạc nền (CHỈ PHÁT 1 LẦN) -->
+<audio id="bgm" loop preload="auto">
+    <source src="./Rockin' Around The Christmas Tree.mp3" type="audio/mpeg">
+</audio>
+
+<script>
+const canvas = document.getElementById("c");
+const ctx = canvas.getContext("2d");
+const bgm = document.getElementById("bgm");
+
+canvas.width = innerWidth;
+canvas.height = innerHeight;
+window.onresize = () => {
+    canvas.width = innerWidth;
+    canvas.height = innerHeight;
+};
+
+/* 🌌 Stars */
+let stars = [];
+for(let i=0;i<200;i++){
+    stars.push({
+        x: Math.random()*canvas.width,
+        y: Math.random()*canvas.height,
+        z: Math.random()*1.5 + 0.5
+    });
+}
+
+/* ❄️ Snow */
+let snow = [];
+for(let i=0;i<120;i++){
+    snow.push({
+        x: Math.random()*canvas.width,
+        y: Math.random()*canvas.height,
+        r: Math.random()*3 + 1,
+        a: Math.random()*Math.PI*2,
+        s: Math.random()*0.6 + 0.4
+    });
+}
+
+/* 💖 Hearts */
+let hearts = [];
+function spawnHeart(x,y){
+    for(let i=0;i<8;i++){
+        hearts.push({
+            x, y,
+            vx: (Math.random()-0.5)*4,
+            vy: (Math.random()-1.5)*4,
+            s: Math.random()*18 + 12,
+            r: Math.random()*Math.PI,
+            a: 1
+        });
+    }
+}
+
+/* 🖱️ Click — phát nhạc DUY NHẤT 1 LẦN */
+let started = false;
+document.addEventListener("click", e => {
+    if (!started) {
+        bgm.volume = 0.5;
+        bgm.play().catch(()=>{});
+        started = true;
+        showNextLine();
+    }
+    spawnHeart(e.clientX, e.clientY);
+});
+
+/* ✨ Mouse glow */
+let mouse = {x:0, y:0};
+document.addEventListener("mousemove", e => {
+    mouse.x = e.clientX;
+    mouse.y = e.clientY;
+});
+
+/* 📝 Lời chúc */
+const lines = [
+    "Chúc em một mùa Giáng Sinh thật an lành ☃️",
+    "Luôn cười tươi như bây giờ nha 😊",
+    "Gặp được nhiều điều dễ thương như chính em 🎀",
+    "Và nếu có gì buồn... thì cũng qua nhanh thôi 💫",
+    "Noel này sẽ sớm có người yêu 💌"
+];
+let lineIndex = 0;
+
+function showNextLine() {
+    if (lineIndex >= lines.length) return;
+
+    const msg = document.getElementById("message");
+    const line = lines[lineIndex];
+    let i = 0;
+    msg.innerHTML = "";
+
+    function type() {
+        if (i < line.length) {
+            msg.innerHTML += line[i++];
+            setTimeout(type, 50);
+        } else {
+            lineIndex++;
+            setTimeout(showNextLine, 2200);
+        }
+    }
+    type();
+}
+
+/* 🎨 Animation loop */
+function draw(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+
+    stars.forEach(s=>{
+        ctx.fillStyle="rgba(255,255,255,0.7)";
+        ctx.fillRect(s.x,s.y,2*s.z,2*s.z);
+        s.y += s.z;
+        if(s.y > canvas.height) s.y = 0;
+    });
+
+    snow.forEach(f=>{
+        f.a += 0.01;
+        f.y += f.s;
+        f.x += Math.sin(f.a);
+        ctx.fillStyle="white";
+        ctx.beginPath();
+        ctx.arc(f.x,f.y,f.r,0,Math.PI*2);
+        ctx.fill();
+        if(f.y > canvas.height) f.y = 0;
+    });
+
+    hearts.forEach((h,i)=>{
+        ctx.save();
+        ctx.translate(h.x,h.y);
+        ctx.rotate(h.r);
+        ctx.scale(h.a,h.a);
+        ctx.fillStyle=`rgba(255,77,109,${h.a})`;
+        ctx.beginPath();
+        ctx.moveTo(0,0);
+        ctx.bezierCurveTo(-h.s,-h.s,-h.s*2,h.s/2,0,h.s);
+        ctx.bezierCurveTo(h.s*2,h.s/2,h.s,-h.s,0,0);
+        ctx.fill();
+        ctx.restore();
+
+        h.x += h.vx;
+        h.y += h.vy;
+        h.a -= 0.02;
+        if(h.a <= 0) hearts.splice(i,1);
+    });
+
+    const g = ctx.createRadialGradient(mouse.x,mouse.y,0,mouse.x,mouse.y,120);
+    g.addColorStop(0,"rgba(255,77,109,0.35)");
+    g.addColorStop(1,"transparent");
+    ctx.fillStyle = g;
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+
+    requestAnimationFrame(draw);
+}
+draw();
+</script>
+
+</body>
+</html>
